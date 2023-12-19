@@ -1,0 +1,12 @@
+Here is the code snippet for inspiration:
+```
+{code}
+```
+The contents of your prompt should be relevant to the snippet, but should not copy its details.
+
+Here are the requirements of the prompt you will create:
+1. The prompt should contain {num_words} words
+2. Ensure the prompt is self-contained and reasonable.
+3. Users are not assumed to know the given "code snippet". So when creating the prompt, don't mention "the snippet", "the given code", "the provided code", etc.!!
+
+Please reply with only the created prompt, without any further explanations. Enclose it in triple quotes (""").
