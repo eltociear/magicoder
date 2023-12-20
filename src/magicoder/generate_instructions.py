@@ -14,7 +14,7 @@ import magicoder
 
 # DO NOT CHANGE THE FOLLOWING
 ERROR_MARGIN = 10
-NUM_WORDS_CHOICES = ["0--200", "200--400", "400--600", "600--800"]
+NUM_WORDS_CHOICES = ["0--100", "100--400", "400--800"]
 
 
 @dataclass(frozen=True)
@@ -66,18 +66,12 @@ class Args:
 
 
 def parse_instruction(response_text: str) -> str | None:
-    count = response_text.count('"""')
-    if count == 0:
-        response_text = response_text.strip()
-    elif count == 2:
-        start_index = response_text.index('"""')
-        end_index = response_text.rindex('"""')
-        response_text = response_text[start_index + 3 : end_index].strip()
-    else:
-        return None
-    if response_text.startswith("```") and response_text.endswith("```"):
-        response_text = response_text[3:-3].strip()
-    return response_text
+    response_text = response_text.strip()
+    while response_text[:3] in ["```", "'''", '"""']:
+        response_text = response_text[3:]
+    while response_text[-3:] in ["```", "'''", '"""']:
+        response_text = response_text[:-3]
+    return response_text.strip()
 
 
 async def main():
@@ -89,6 +83,9 @@ async def main():
         split="train",
         num_proc=magicoder.utils.N_CORES,
     )
+    assert len(set(d["seed"] for d in raw_dataset)) == len(
+        raw_dataset
+    ), "Duplicate seeds appear in the dataset"
 
     # Every run should produce the same data as long as the default params are not changed
     start_index = args.seed_code_start_index
@@ -104,7 +101,7 @@ async def main():
         assert (
             data_fingerprint in args.continue_from
         ), f"Fingerprint mismatch: {data_fingerprint}"
-        assert f"{start_index}_{end_index}" in args.continue_from, "Index mismatch"
+        assert f"-{start_index}-" in args.continue_from, "Index mismatch"
         old_path = Path(args.continue_from)
         assert old_path.exists()
         old_data = magicoder.utils.read_jsonl(old_path)
@@ -120,9 +117,7 @@ async def main():
         f_out = old_path.open("a")
     else:
         tag = "" if args.tag == "" else f"-{args.tag}"
-        path = Path(
-            f"data{tag}-{data_fingerprint}-{start_index}_{end_index}-{timestamp}.jsonl"
-        )
+        path = Path(f"data{tag}-{data_fingerprint}-{start_index}-{timestamp}.jsonl")
         assert not path.exists()
         f_out = path.open("w")
         print("Saving to", path)
@@ -147,7 +142,7 @@ async def main():
             attr_num_words.append(num_words)
             sys_prompt = sys_prompt_template
             user_prompt = user_prompt_template.format(
-                code=example["seed"], num_words=num_words
+                fragments=example["seed"], num_words=num_words
             )
             messages = [
                 {"role": "system", "content": sys_prompt},

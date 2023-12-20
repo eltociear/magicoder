@@ -115,7 +115,6 @@ async def main():
             time.sleep(60)
         # assert index + start_index == example["index"]
         request_params = list[dict[str, Any]]()
-        attr_num_words: list[str] = []
         for index, example in enumerate(examples):
             seed = args.seed + effective_index + index
             instruction = example["instruction"]
