@@ -96,9 +96,7 @@ async def main():
         f_out = old_path.open("a")
     else:
         tag = "" if args.tag == "" else f"-{args.tag}"
-        path = Path(
-            f"data{tag}-{data_fingerprint}-{start_index}_{end_index}-{timestamp}.jsonl"
-        )
+        path = Path(f"data{tag}-{data_fingerprint}-{start_index}-{timestamp}.jsonl")
         assert not path.exists()
         f_out = path.open("w")
         print("Saving to", path)
